@@ -139,7 +139,7 @@ def fold_batchnorms(model):
     return n
 
 
-def prepare_fast(model):
+def prepare_fast(model, hacc=False):
     apply(model)
     model.eval()
     model._nfold = fold_batchnorms(model)
@@ -159,6 +159,9 @@ def prepare_fast(model):
     for m in model.modules():
         if isinstance(m, (nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d, nn.ConvTranspose3d)) and m.weight.dim() in (4, 5):
             m.weight.data = m.weight.data.contiguous(memory_format=_mf(m.weight.data))
+    if hacc:   # cuda-kernels branch: fp16-accumulate cuDNN 2-D convs (core/cudnn_conv.py)
+        from core import cudnn_conv
+        model._nhacc = cudnn_conv.patch_convs(model, skip={id(m) for m in model.modules() if isinstance(m, nn.Conv3d)})
     model._dxf = torch.arange(-model.args.corr_radius, model.args.corr_radius + 1, device=cc1.weight.device).float()
     return model
 
