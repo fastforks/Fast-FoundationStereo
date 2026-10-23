@@ -1,6 +1,6 @@
 # Fast-FoundationStereo: faster inference fork
 
-> **You are on `portable`.** Research fork of [NVlabs/Fast-FoundationStereo](https://github.com/NVlabs/Fast-FoundationStereo) (base `476f424`, 2026-09-11; `main` mirrors upstream). Two branches:
+> **You are on `cuda-kernels`.** Research fork of [NVlabs/Fast-FoundationStereo](https://github.com/NVlabs/Fast-FoundationStereo) (base `476f424`, 2026-09-11; `main` mirrors upstream). Two branches:
 > - [`portable`](https://github.com/fastforks/Fast-FoundationStereo/tree/portable): plain PyTorch (`core/inference_friendly2.py`; the simpler `core/inference_patch.py` is about as fast in eager mode), exports to ONNX / TensorRT, no build step, no triton / torch.compile.
 > - [`cuda-kernels`](https://github.com/fastforks/Fast-FoundationStereo/tree/cuda-kernels): `portable` plus custom CUDA kernels (`core/inference_max2.py`, torch extension `core/csrc/ffs_fused.cu`; prebuilt for sm_80/86/89/90/120 + PTX against torch 2.14 cu130, built on first use from `CUDA_HOME` + `CUTLASS_DIR` when no prebuilt matches).
 >
