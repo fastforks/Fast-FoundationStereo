@@ -1,3 +1,29 @@
+# Fast-FoundationStereo: faster inference fork
+
+> **You are on `portable`.** Research fork of [NVlabs/Fast-FoundationStereo](https://github.com/NVlabs/Fast-FoundationStereo) (base `476f424`, 2026-09-11; `main` mirrors upstream). Two branches:
+> - [`portable`](https://github.com/fastforks/Fast-FoundationStereo/tree/portable): plain PyTorch (`core/inference_friendly2.py`; the simpler `core/inference_patch.py` is about as fast in eager mode), exports to ONNX / TensorRT, no build step, no triton / torch.compile.
+> - [`cuda-kernels`](https://github.com/fastforks/Fast-FoundationStereo/tree/cuda-kernels): `portable` plus custom CUDA kernels (`core/inference_max2.py`, torch extension `core/csrc/ffs_fused.cu`; prebuilt for sm_80/86/89/90/120 + PTX against torch 2.14 cu130, built on first use from `CUDA_HOME` + `CUTLASS_DIR` when no prebuilt matches).
+>
+> Licence, as upstream: code and weights NVIDIA licence (non-commercial / research only, see [LICENSE.txt](LICENSE.txt))
+
+```python
+from core.inference_friendly2 import prepare_friendly2, forward_friendly2   # portable
+prepare_friendly2(model); disp = forward_friendly2(model, L, R, iters=8)
+from core.inference_max2 import prepare_max2, forward_max2                  # cuda-kernels
+prepare_max2(model); disp = forward_max2(model, L, R, iters=8)
+```
+
+Fast-FoundationStereo, released weights `23-36-37` (upstream default), valid_iters 8, max_disp 192, fp16 autocast (upstream, cost volume `pytorch1` via `torch.compile`) / fp16 (forks), pad /32; RTX 5060 Ti 16 GB, torch 2.14.1+cu130, TensorRT 11.4, 2026-10-23. Median of 10 runs after 3 warm-ups; memory = torch peak allocated / reserved (TensorRT: engine device memory). EPE on 6 ETH3D and 3 Middlebury-H training pairs (short check, not a full eval).
+
+| version | KITTI ms | Midd-H ms | Midd-F ms | speed-up at H | peak MB at H (alloc / reserved) | peak MB at F (alloc / reserved) | startup / new size | ETH3D EPE | Midd-H EPE |
+|---|---|---|---|---|---|---|---|---|---|
+| upstream | 108.9 | 407.2 | not measured | 1.00x | 2879 / 3490 | not measured | 3.3 s (+6.2 s first call, compile) / 5.1 s | 0.324 | 0.314 |
+| **portable** | 99.1 | 327.9 | not measured | 1.24x | 2070 / 2518 | not measured | 3.4 s / 0 ms | 0.323 | 0.313 |
+| portable → TensorRT | 48.4 | 143.5 | not measured | 2.84x | ctx 1085 | not measured | 1.7 s / none | not measured | not measured |
+| **cuda-kernels** | 49.2 | 144.0 | not measured | 2.83x | 1829 / 2350 | not measured | 3.5 s / 30 ms | 0.323 | 0.315 |
+
+---
+
 # Fast-FoundationStereo: Real-Time Zero-Shot Stereo Matching
 
 This is the official implementation of our paper accepted to CVPR 2026
