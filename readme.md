@@ -13,14 +13,15 @@ from core.inference_max2 import prepare_max2, forward_max2                  # cu
 prepare_max2(model); disp = forward_max2(model, L, R, iters=8)
 ```
 
-Fast-FoundationStereo, released weights `23-36-37` (upstream default), valid_iters 8, max_disp 192, fp16 autocast (upstream, cost volume `pytorch1` via `torch.compile`) / fp16 (forks), pad /32; RTX 5060 Ti 16 GB, torch 2.14.1+cu130, TensorRT 11.4, 2026-10-23. Median of 10 runs after 3 warm-ups; memory = torch peak allocated / reserved (TensorRT: engine device memory). EPE on 6 ETH3D and 3 Middlebury-H training pairs (short check, not a full eval).
+Fast-FoundationStereo, released weights `23-36-37` (upstream default), valid_iters 8, max_disp 192, pad /32; RTX 5060 Ti 16 GB, torch 2.14.1+cu130, TensorRT 11.4, 2026-10-23. Upstream runs its own default fp16 autocast and its built-in `torch.compile` cost volume (`pytorch1`). "upstream + flags" = unchanged upstream code with `torch.inference_mode()`, fp16 autocast, channels_last conv weights + inputs, `cudnn.benchmark=True` and TF32 set from the calling script; `model.half()` was also tried: same EPE but slower (327.5 ms at H), so not used. Median of 10 runs after 3 warm-ups; memory = torch peak allocated / reserved (TensorRT: engine device memory). EPE on 6 ETH3D and 3 Middlebury-H training pairs (short check, not a full eval).
 
-| version | KITTI ms | Midd-H ms | Midd-F ms | speed-up at H | peak MB at H (alloc / reserved) | peak MB at F (alloc / reserved) | startup / new size | ETH3D EPE | Midd-H EPE |
+| version | KITTI ms | Midd-H ms | Midd-F ms | speed-up at H (vs flags / vs upstream) | peak MB at H (alloc / reserved) | peak MB at F (alloc / reserved) | startup / new size | ETH3D EPE | Midd-H EPE |
 |---|---|---|---|---|---|---|---|---|---|
-| upstream | 108.9 | 407.2 | not measured | 1.00x | 2879 / 3490 | not measured | 3.3 s (+6.2 s first call, compile) / 5.1 s | 0.324 | 0.314 |
-| **portable** | 99.1 | 327.9 | not measured | 1.24x | 2070 / 2518 | not measured | 3.4 s / 0 ms | 0.323 | 0.313 |
-| portable → TensorRT | 48.4 | 143.5 | not measured | 2.84x | ctx 1085 | not measured | 1.7 s / none | not measured | not measured |
-| **cuda-kernels** | 49.2 | 144.0 | not measured | 2.83x | 1829 / 2350 | not measured | 3.5 s / 30 ms | 0.323 | 0.315 |
+| upstream (fp16 autocast) | 108.9 | 407.2 | not measured | 0.78x / 1.00x | 2879 / 3490 | not measured | 3.3 s (+6.2 s first call, compile) / 5.1 s | 0.324 | 0.314 |
+| upstream + flags (autocast, channels_last, cudnn.benchmark, TF32) | 91.8 | 318.7 | not measured | 1.00x / 1.28x | 2668 / 3212 | not measured | 3.5 s (+10.6 s first call) / 9.1 s | 0.324 | 0.314 |
+| **portable** | 99.1 | 327.9 | not measured | 0.97x / 1.24x | 2070 / 2518 | not measured | 3.4 s / 0 ms | 0.323 | 0.313 |
+| portable → TensorRT | 48.4 | 143.5 | not measured | 2.22x / 2.84x | ctx 1085 | not measured | 1.7 s / none | not measured | not measured |
+| **cuda-kernels** | 49.2 | 144.0 | not measured | 2.21x / 2.83x | 1829 / 2350 | not measured | 3.5 s / 30 ms | 0.323 | 0.315 |
 
 ---
 
