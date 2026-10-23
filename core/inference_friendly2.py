@@ -1,5 +1,5 @@
 """Upstream-friendly v2 (plain PyTorch, ONNX/TensorRT-exportable) Fast-FS path: the exportable subset of the max v2 changes
-(exp 003 attempt/trtgap, results/2026-10-10_trtgap_fastfs.txt) on top of core/inference_patch (friendly v1):
+(cuda-kernels branch) on top of core/inference_patch (friendly v1):
   * GRU: every activation zero-padded to a multiple of 8 channels (weights padded once, exact), z|r convs merged, mask head only
     after the last iteration, one concat per input instead of several
   * cost-volume path: volume_dim (28) channels zero-padded to 32 (Conv3d / ConvTranspose3d / FeatureAtt weights padded once;

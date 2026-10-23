@@ -1,4 +1,4 @@
-"""General (any size, no per-size compile) inference patches for Fast-FoundationStereo (exp 003, attempt/general).
+"""General (any size, no per-size compile) inference patches for Fast-FoundationStereo.
 
     from core.inference_patch import apply; apply(model)
 
